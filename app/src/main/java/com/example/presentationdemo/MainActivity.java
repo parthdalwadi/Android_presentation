@@ -11,32 +11,53 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;//
 import android.widget.TextView; // added
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener,
-        GestureDetector.OnGestureListener, View.OnDragListener, GestureDetector.OnDoubleTapListener {
+       GestureDetector.OnGestureListener, View.OnDragListener,
+    GestureDetector.OnDoubleTapListener {
 
 
     private static final String TAG = "touchDemo";
-    TextView tv_touch;
-    ImageView iv_touch;
+
+
+    ImageView topImage, shareImage, delImage, likeImage;
+    TextView textView;
+
+
     GestureDetector gestureDetector;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        textView = findViewById(R.id.details);
+        topImage = findViewById(R.id.image1);
 
-        tv_touch = findViewById(R.id.touch_result);
-        iv_touch = findViewById(R.id.touch);
+        shareImage = findViewById(R.id.share_i);
+        delImage = findViewById(R.id.del_i);
+        likeImage = findViewById(R.id.like);
 
-        iv_touch.setOnTouchListener(this);
+
+
+        topImage.setOnTouchListener(this);
+        likeImage.setOnTouchListener(this);
+        delImage.setOnTouchListener(this);
+        shareImage.setOnTouchListener(this);
+
+
+
         gestureDetector = new GestureDetector(this, this);
 
 
     }
 
+
+
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-       // Log.d(TAG, "onTouch: called");
+        // Touch detection
+
+//        Log.d(TAG, "onTouch: called");
 //        int action = event.getAction();
 //
 //        switch (action){
@@ -52,9 +73,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 //            default: return true;
 //        }
 
+
+
         gestureDetector.onTouchEvent(event);
 
         return true;
+
 
     }
 
@@ -64,13 +88,16 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
     @Override
     public boolean onDown(MotionEvent e) {
+
         Log.i(TAG, "onDown: ");
-        return true;
+
+        return false;
     }
 
     @Override
     public void onShowPress(MotionEvent e) {
         Log.i(TAG, "onShowPress: ");
+        textView.setText("Image Details : icon01_01.png");
 
 
     }
@@ -78,7 +105,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
         Log.i(TAG, "onSingleTapUp: ");
-        iv_touch.setImageResource(R.drawable.touch);
+        shareImage.setVisibility(View.INVISIBLE);
+        delImage.setVisibility(View.INVISIBLE);
+
+        likeImage.setImageResource(R.drawable.hearte);
+        topImage.setImageResource(R.drawable.icon01_01);
+
+
 
         return true;
     }
@@ -86,30 +119,74 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         Log.i(TAG, "onScroll: ");
-        iv_touch.setImageResource(R.drawable.scroll);
 
+        topImage.setY(e2.getY() + topImage.getY());
+        topImage.setX(e2.getX() + topImage.getX());
         return true;
     }
 
     @Override
     public void onLongPress(MotionEvent e) {
-
         Log.i(TAG, "onLongPress: ");
-        iv_touch.setImageResource(R.drawable.broken);
+        shareImage.setVisibility(View.VISIBLE);
+        delImage.setVisibility(View.VISIBLE);
 
-        // build shadow builder - 3 line code
+        View.DragShadowBuilder builder = new View.DragShadowBuilder(topImage);
 
-        //View.DragShadowBuilder shadow_builder = new View.DragShadowBuilder(iv_touch);
-       // iv_touch.startDrag(null, shadow_builder, null, 0);
-        //shadow_builder.getView().setOnDragListener(this);
+        topImage.startDrag(null, builder, null,0);
+
+        builder.getView().setOnDragListener(this);
+
+
 
     }
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
 
-        Log.i(TAG, "onFling: ");
-        return true;
+
+        boolean result = false;
+
+        float diffX = e2.getX() - e1.getX();
+        float diffY = e2.getY() - e1.getY();
+
+        if (Math.abs(diffX) > Math.abs(diffY)){
+            // fliong right-left
+
+            if (Math.abs(diffX) > 200 && Math.abs(velocityX) > 100){
+                if (diffX > 0){
+                    //right fling
+                    result = true;
+                    flingDirection("right");
+                } else{
+                    //left fling
+                    result = true;
+                    flingDirection("left");
+                }
+            }
+
+        }
+
+        else{
+            //fling top-bottom
+            if (Math.abs(diffY) > 200 && Math.abs(velocityY) > 100){
+                if (diffY > 0){
+                    //bottom fling
+                    result = true;
+                    flingDirection("Bottom");
+                } else{
+                    //up fling
+                    result = true;
+                    flingDirection("Up");
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public void flingDirection(String direction){
+        Toast.makeText(this, direction + " fling", Toast.LENGTH_SHORT).show();
     }
 
     // OnDrag Method
@@ -124,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 return true;
             case DragEvent.ACTION_DRAG_ENDED:
                 Log.i(TAG, "onDrag: ended");
-                iv_touch.setImageResource(0);
+                //iv_touch.setImageResource(0);
                 return true;
             default: return true;
 
@@ -137,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     }
 
     /* double tap methods */
-    
+
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
         Log.i(TAG, "onSingleTapConfirmed: ");
@@ -147,8 +224,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     @Override
     public boolean onDoubleTap(MotionEvent e) {
         Log.i(TAG, "onDoubleTap: ");
-        Intent i = new Intent(MainActivity.this, Second.class);
-        startActivity(i);
+        likeImage.setImageResource(R.drawable.heartf);
         return true;
     }
 
